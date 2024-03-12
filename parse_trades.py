@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import streamlit as st
 from decimal import Decimal as Dec
 
 
@@ -9,11 +8,12 @@ THEADER = "#asset,transaction_date,transaction_type,amount,cost,fee,PricePerUnit
 
 def read_csv():
     data = []
-    f = open("ledger_long.csv","r")
+    f = open("ledger_long.csv", "r")
     lines = f.readlines()
     for line in lines:
         data.append(line.replace('"',''))
     return data
+
 
 def extract_ticker(ticker):
     if "ADA" in ticker:
@@ -43,22 +43,27 @@ def extract_ticker(ticker):
     if "ETHW" in ticker:
         return "ETHW"
 
+
 def sort_data(data):
     return sorted(data, key=lambda x:x[:3])
 
-def ppu(amount,cost):
-    return (abs(cost)/abs(amount))
+
+def ppu(amount, cost):
+    return abs(cost)/abs(amount)
+
 
 def purchase_sale(line1, line2):
     if extract_ticker(line1[6]) == "EUR":
         # purchase
-        return f"{extract_ticker(line2[6])},{line2[2]},purchase,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8])},{ppu(Dec(line2[7]),Dec(line1[7]))}"
+        return f"{extract_ticker(line2[6])},{line2[2]},purchase,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8])}," \
+               f"{ppu(Dec(line2[7]),Dec(line1[7]))}"
     # sale
-    return f"{extract_ticker(line1[6])},{line2[2]},sale,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8]),ppu(Dec(line1[7]),Dec(line2[7]))}"
+    return f"{extract_ticker(line1[6])},{line2[2]},sale,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8])}," \
+           f"{ppu(Dec(line1[7]),Dec(line2[7]))}"
+
 
 def parse_trades():
-    data = []
-    data.append(THEADER)
+    data = [THEADER]
     data_lines = read_csv()
     del data_lines[0]
     for i, line1 in enumerate(data_lines):
@@ -80,5 +85,6 @@ def parse_trades():
     data = sort_data(data)
     for item in data:
         print(item)
+
 
 parse_trades()
