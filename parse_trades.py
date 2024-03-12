@@ -82,9 +82,8 @@ def parse_trades():
             if line1s[1] == line2s[1] and line1s[3] == "spend" and line2s[3] == "receive":
                 data.append(purchase_sale(line1s, line2s))
                 break
-    data = sort_data(data)
-    for item in data:
-        print(item)
+    return sort_data(data)
 
 
-parse_trades()
+for item in parse_trades():
+    print(item)
