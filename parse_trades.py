@@ -8,7 +8,7 @@ THEADER = "#asset,transaction_date,transaction_type,amount,cost,fee,PricePerUnit
 
 def read_csv():
     data = []
-    f = open("ledger_long.csv", "r")
+    f = open("ledgers_16.csv", "r")
     lines = f.readlines()
     for line in lines:
         data.append(line.replace('"',''))
@@ -72,17 +72,29 @@ def parse_trades():
             break
         if line1s[3] == "transfer" and (line1s[4] == "stakingfromspot" or line1s[4] == "spottostaking"):
             continue
+        if line1s[3] == "withdrawal":
+            continue
         for line2 in data_lines[i+1:]:
             line2s = line2.split(",")
             if len(line2s) < 5:
                 break
-            if line1s[3] == line2s[3] == "deposit" and line1s[1] == line2s[1]:
-                data.append(f"{extract_ticker(line2s[6])},{line2s[2]},deposit,{Dec(line2s[7])},0,{Dec(line2s[8])}")
+            if line1s[1] == line2s[1]:
+                if line1s[3] == line2s[3] == "deposit":
+                    data.append(f"{extract_ticker(line2s[6])},{line2s[2]},deposit,{Dec(line2s[7])},0,{Dec(line2s[8])}")
+                    break
+                if line1s[3] in {"spend", "trade"} and line2s[3] in {"receive", "trade"}:
+                    data.append(purchase_sale(line1s, line2s))
+                    break
+                if line1s[3] == "deposit" and line2s[4] == "spotfromfutures":
+                    data.append(f"{extract_ticker(line2s[6])},{line2s[2]},deposit,{Dec(line2s[7])},0,{Dec(line2s[8])}")
+                    break
+            if line1s[3] == "deposit" and line2s[3] == "staking" and line1s[7] == line2s[7]:
+                data.append(f"{extract_ticker(line2s[6])},{line2s[2]},staking,{Dec(line2s[7])},0,{Dec(line2s[8])}")
                 break
-            if line1s[1] == line2s[1] and line1s[3] == "spend" and line2s[3] == "receive":
-                data.append(purchase_sale(line1s, line2s))
+            if line2s[3] == "withdrawal":
                 break
-    return sort_data(data)
+    # return sort_data(data)
+    return data
 
 
 for item in parse_trades():
