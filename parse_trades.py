@@ -3,7 +3,7 @@
 from decimal import Decimal as Dec
 
 
-THEADER = "#asset,transaction_date,transaction_type,amount,cost,fee,PricePerUnit"
+THEADER = "#asset,transaction date,transaction type,coin amount,EUR,fee,PricePerUnit"
 
 
 def read_csv():
@@ -49,7 +49,7 @@ def sort_data(data):
 
 
 def ppu(amount, cost):
-    return abs(cost)/abs(amount)
+    return "%0.2f" % (abs(cost)/abs(amount))
 
 
 def purchase_sale(line1, line2):
@@ -58,7 +58,7 @@ def purchase_sale(line1, line2):
         return f"{extract_ticker(line2[6])},{line2[2]},purchase,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8])}," \
                f"{ppu(Dec(line2[7]),Dec(line1[7]))}"
     # sale
-    return f"{extract_ticker(line1[6])},{line2[2]},sale,{Dec(line2[7])},{Dec(line1[7])},{Dec(line1[8])}," \
+    return f"{extract_ticker(line1[6])},{line2[2]},sale,{Dec(line1[7])},{Dec(line2[7])},{Dec(line2[8])}," \
            f"{ppu(Dec(line1[7]),Dec(line2[7]))}"
 
 
@@ -80,7 +80,7 @@ def parse_trades():
                 break
             if line1s[1] == line2s[1]:
                 if line1s[3] == line2s[3] == "deposit":
-                    data.append(f"{extract_ticker(line2s[6])},{line2s[2]},deposit,{Dec(line2s[7])},0,{Dec(line2s[8])}")
+                    data.append(f"{extract_ticker(line2s[6])},{line2s[2]},deposit,0,{Dec(line2s[7])},0")
                     break
                 if line1s[3] in {"spend", "trade"} and line2s[3] in {"receive", "trade"}:
                     data.append(purchase_sale(line1s, line2s))
