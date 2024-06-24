@@ -54,7 +54,7 @@ def sort_data(data):
     return sorted(data, key=lambda x:x[:3])
 
 def ppu(amount, cost, ticker):
-    if "PEPE" in ticker:
+    if ticker in {"PEPE"}:
         return "%0.10f" % (abs(cost)/abs(amount))
     return "%0.2f" % (abs(cost)/abs(amount))
 
@@ -75,7 +75,7 @@ def parse_trades():
     for i, line1 in enumerate(data_lines):
         line1s = line1.split(",")
         if len(line1s) < 5:
-            break
+            continue
         ticker1 = extract_ticker(line1s[6])
         if line1s[3] == "transfer" and (line1s[4] == "stakingfromspot" or line1s[4] == "spottostaking"):
             continue
@@ -84,7 +84,7 @@ def parse_trades():
         if line1s[3] == "deposit" and ticker1 == "EUR":
             data.append(f"{ticker1},{line1s[2]},deposit,0,{Dec(line1s[8])},0")
             continue
-        if line1s[3] == "staking":
+        if line1s[3] == "staking" or (line1s[3] == "earn" and line1s[4] == "reward"):
             data.append(f"{ticker1},{line1s[2]},staking,{Dec(line1s[8])},0,{Dec(line1s[9])}")
             continue
         for line2 in data_lines[i+1:]:
@@ -100,9 +100,35 @@ def parse_trades():
                     break
             if line2s[3] == "withdrawal":
                 break
-    # return sort_data(data)
+    #return sort_data(data)
     return data
 
+def cleanup_staking(data):
+    clean_data = []
+    for item in data:
+        if "staking" in item:
+            split_item = item.split(",")
+            ticker = split_item[0]
+            coin_amount = split_item[3]
+            fee = split_item[5]
+            for i in range(len(clean_data)):
+                if ticker in clean_data[i] and "staking" in clean_data[i]:
+                    split_i = clean_data[i].split(",")
+                    coin_amount = Dec(split_i[3]) + Dec(coin_amount)
+                    fee = Dec(split_i[5]) + Dec(fee)
+                    clean_data[i] = f"{ticker},{split_i[1]},staking,{coin_amount},0,{fee},0"
+                    break
+            else:
+                clean_data.append(item)
+        else:
+            clean_data.append(item)
+    return clean_data
 
-for item in parse_trades():
+
+trades = parse_trades()
+#for item in trades:
+#    print(item)
+
+new_data = cleanup_staking(trades)
+for item in new_data:
     print(item)
